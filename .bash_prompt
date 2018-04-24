@@ -1,0 +1,42 @@
+#!/bin/bash
+
+
+parse_git_branch() {
+    echo $(git branch 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/\1/')
+}
+
+
+prompt_head() {
+    branch="$(parse_git_branch)"
+    if [ "$branch" != "" ]
+    then
+        origin=$(git branch -vv 2> /dev/null | sed -e '/^[^*]/d' -e 's/* .*\[\([^]]*\)\].*/\1/')
+        if [ "${origin:0:1}" = "*" ]
+        then
+            origin="local"
+        fi
+        if [ "$branch" = "master" ]
+        then
+            branch="\001\033[01;31m\002${branch}\001\033[00;33m\002"
+        fi
+        output="\001\033[00;32m\002╭\001\033[01;33m\002[\001\033[01;33m\002$branch\001\033[00;33m\002@\001\033[00;33m\002$origin\001\033[01;33m\002]\001\033[00m\002 "
+        echo -e "$output"
+    fi
+}
+
+
+prompt_tail() {
+    branch="$(parse_git_branch)"
+    if [ "$branch" != "" ]
+    then
+        echo -e "\001\033[00;32m\002\n╰─"
+    fi
+}
+
+
+PS1='$(prompt_head)'
+PS1+='\[\033[00m\]'
+PS1+='\[\033[00;33m\]${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u\[\033[00;35m\]@\[\033[01;35m\]\h\[\033[01;35m\]:\[\033[00m\]\[\033[00;32m\]\w'
+PS1+='\[\033[01;32m\]'
+PS1+='$(prompt_tail)'
+PS1+='\$\[\033[00m\] '
